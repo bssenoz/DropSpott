@@ -19,6 +19,33 @@ interface IUpdateDropBody {
     claimWindowEnd?: string;
 }
 
+// GET /admin/drops - Tüm drop'ları listele
+export const getAllDrops = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const drops = await prisma.drop.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        res.status(200).json({
+            message: 'Drop\'lar başarıyla getirildi.',
+            drops
+        });
+    } catch (error) {
+        console.error('Drop listeleme hatası:', error);
+        next({
+            status: 500,
+            message: 'Drop\'lar listelenirken bir hata oluştu.',
+            stack: (error as Error).stack
+        });
+    }
+};
+
 // POST /admin/drops - Yeni drop oluştur (idempotent)
 export const createDrop = async (
     req: Request<{}, {}, ICreateDropBody>,

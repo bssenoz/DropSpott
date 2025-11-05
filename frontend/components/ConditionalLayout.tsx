@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -12,14 +13,56 @@ export default function ConditionalLayout({
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const isAuthPage = pathname?.startsWith('/auth');
+  const [mounted, setMounted] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
     router.push('/auth/login');
   };
 
   if (isAuthPage) {
     return <>{children}</>;
+  }
+
+  // Hydration hatasını önlemek için client-side mounting'i bekle
+  if (!mounted) {
+    return (
+      <>
+        <nav className="shadow-sm py-4 mb-8">
+          <div className="max-w-[1360px] mx-auto flex items-center justify-between px-4 text-sm">
+            <div className="flex items-center gap-6">
+              <a
+                href="/"
+                className="hover:text-blue-600 font-medium transition-colors"
+              >
+                Ana Sayfa
+              </a>
+            </div>
+            <div className="flex items-center gap-4">
+              <a
+                href="/auth/login"
+                className="hover:text-blue-600 font-medium transition-colors"
+              >
+                Giriş Yap
+              </a>
+              <a
+                href="/auth/register"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Kayıt Ol
+              </a>
+            </div>
+          </div>
+        </nav>
+        <main className="max-w-[1360px] mx-auto bg-white rounded-xl shadow p-8">
+          {children}
+        </main>
+      </>
+    );
   }
 
   return (

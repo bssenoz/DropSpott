@@ -1,29 +1,33 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-interface User {
+interface IUser {
     id: string;
     email: string;
     role: 'ADMIN' | 'USER';
 }
 
-interface AuthState {
+interface IAuthState {
     token: string | null;
-    user: User | null;
+    user: IUser | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
-    
+}
+
+interface IAuthActions {
     authenticate: (endpoint: 'signup' | 'login', email: string, password: string) => Promise<void>;
     signup: (email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
-    logout: () => Promise<void>;
+    logout: () => void;
+    clearError: () => void;
 }
 
-const API_URL = 'http://localhost:5000/auth'; 
+type AuthStore = IAuthState & IAuthActions;
 
-// localStorage'dan token ve user bilgilerini yükle
-const loadAuthFromStorage = () => {
+const API_URL = 'http://localhost:5000/auth';
+
+const loadAuthFromStorage = (): { token: string | null; user: IUser | null } => {
     if (typeof window === 'undefined') {
         return { token: null, user: null };
     }
@@ -45,7 +49,7 @@ const loadAuthFromStorage = () => {
 
 const { token: initialToken, user: initialUser } = loadAuthFromStorage();
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
     token: initialToken,
     user: initialUser,
     isAuthenticated: !!initialToken && !!initialUser,
@@ -54,9 +58,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     authenticate: async (endpoint: 'signup' | 'login', email: string, password: string) => {
         set({ isLoading: true, error: null });
+        
         try {
             const response = await axios.post(`${API_URL}/${endpoint}`, { email, password });
-            
             const { token, user } = response.data;
 
             localStorage.setItem('authToken', token);
@@ -69,7 +73,6 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isLoading: false,
                 error: null,
             });
-
         } catch (err) {
             const errorMessage = axios.isAxiosError(err) && err.response 
                 ? err.response.data.message 
@@ -86,17 +89,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    // Kayıt Fonksiyonu
     signup: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
+        
         try {
-            const response = await axios.post(`${API_URL}/signup`, { email, password });
-
-            set({
-                isLoading: false,
-                error: null,
-            });
-
+            await axios.post(`${API_URL}/signup`, { email, password });
+            set({ isLoading: false, error: null });
         } catch (err) {
             const errorMessage = axios.isAxiosError(err) && err.response 
                 ? err.response.data.message 
@@ -110,16 +108,42 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
     
-    // Giriş Fonksiyonu
     login: async (email: string, password: string) => {
         const store = useAuthStore.getState();
         await store.authenticate('login', email, password);
     },
 
-    // Çıkış Fonksiyonu
-    logout: async () => {
+    logout: () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
-        set({ token: null, user: null, isAuthenticated: false, error: null });
+        set({ 
+            token: null, 
+            user: null, 
+            isAuthenticated: false, 
+            error: null 
+        });
+    },
+
+    clearError: () => {
+        set({ error: null });
     },
 }));
+
+export const useAuth = () => {
+    const token = useAuthStore((state) => state.token);
+    const user = useAuthStore((state) => state.user);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const isLoading = useAuthStore((state) => state.isLoading);
+    const error = useAuthStore((state) => state.error);
+    
+    return { token, user, isAuthenticated, isLoading, error };
+};
+
+export const useAuthActions = () => {
+    const login = useAuthStore((state) => state.login);
+    const signup = useAuthStore((state) => state.signup);
+    const logout = useAuthStore((state) => state.logout);
+    const clearError = useAuthStore((state) => state.clearError);
+    
+    return { login, signup, logout, clearError };
+};
