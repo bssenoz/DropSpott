@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Output structure */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* Language and module settings */
+    "target": "ES2020",
+    "module": "commonjs",
+
+    /* Enable Node.js types */
+    "lib": ["esnext"],
+    "types": ["node"],
+
+    /* Emit options */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    /* Type safety */
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* Experimental (optional but useful) */
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
