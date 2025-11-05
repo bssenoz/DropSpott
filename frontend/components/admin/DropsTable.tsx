@@ -14,7 +14,7 @@ export function DropsTable({ drops, loading, onEdit, onDelete }: IDropsTableProp
         return (
             <div className="bg-white border rounded-lg shadow-sm">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-semibold">Drop Listesi</h2>
+                    <h2 className="text-xl text-gray-700 font-semibold">Drop Listesi</h2>
                 </div>
                 <div className="p-6 text-center text-gray-500">
                     Yükleniyor...
@@ -27,7 +27,7 @@ export function DropsTable({ drops, loading, onEdit, onDelete }: IDropsTableProp
         return (
             <div className="bg-white border rounded-lg shadow-sm">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-semibold">Drop Listesi</h2>
+                    <h2 className="text-xl text-gray-700 font-semibold">Drop Listesi</h2>
                 </div>
                 <div className="p-6 text-center text-gray-500">
                     Henüz drop bulunmamaktadır.
@@ -39,7 +39,7 @@ export function DropsTable({ drops, loading, onEdit, onDelete }: IDropsTableProp
     return (
         <div className="bg-white border rounded-lg shadow-sm">
             <div className="p-6 border-b">
-                <h2 className="text-xl font-semibold">Drop Listesi</h2>
+                <h2 className="text-xl text-gray-700 font-semibold">Drop Listesi</h2>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full">

@@ -127,8 +127,6 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     },
 
     deleteDrop: async (token: string, id: string): Promise<boolean> => {
-        if (!confirm('Bu drop\'u silmek istediğinizden emin misiniz?')) return false;
-
         set({ error: null });
         
         try {

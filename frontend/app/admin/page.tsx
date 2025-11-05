@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/authStore';
 import { useAdminState, useAdminActions } from '@/store/adminStore';
-import { ErrorAlert } from '@/components/admin/ErrorAlert';
+import { ErrorAlert } from '@/components/ErrorAlert';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { CreateDropForm } from '@/components/admin/CreateDropForm';
-import { EditDropForm } from '@/components/admin/EditDropForm';
+import { CreateDropModal } from '@/components/admin/CreateDropModal';
+import { EditDropModal } from '@/components/admin/EditDropModal';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { DropsTable } from '@/components/admin/DropsTable';
+import { Toast } from '@/components/Toast';
 
 export default function AdminPage() {
     const { isAuthenticated, token } = useAuth();
@@ -25,6 +27,8 @@ export default function AdminPage() {
         clearError,
     } = useAdminActions();
     const [mounted, setMounted] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const [deleteDropId, setDeleteDropId] = useState<string | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -44,6 +48,9 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             toggleCreateForm();
+            setToast({ message: 'Drop başarıyla oluşturuldu!', type: 'success' });
+        } else {
+            setToast({ message: 'Drop oluşturulurken bir hata oluştu.', type: 'error' });
         }
     };
 
@@ -55,13 +62,43 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             cancelEdit();
+            setToast({ message: 'Drop başarıyla güncellendi!', type: 'success' });
+        } else {
+            setToast({ message: 'Drop güncellenirken bir hata oluştu.', type: 'error' });
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!token) return;
-        await deleteDrop(token, id);
+    const handleDeleteClick = (id: string) => {
+        setDeleteDropId(id);
     };
+
+    const handleDeleteConfirm = async () => {
+        if (!token || !deleteDropId) return;
+        
+        const result = await deleteDrop(token, deleteDropId);
+        if (result) {
+            setToast({ message: 'Drop başarıyla silindi!', type: 'success' });
+        } else {
+            setToast({ message: 'Drop silinirken bir hata oluştu.', type: 'error' });
+        }
+        setDeleteDropId(null);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setDeleteDropId(null);
+    };
+
+    const handleCloseCreateModal = () => {
+        resetForm();
+        toggleCreateForm();
+    };
+
+    const handleCloseEditModal = () => {
+        resetForm();
+        cancelEdit();
+    };
+
+    const dropToDelete = deleteDropId ? drops.find(d => d.id === deleteDropId) || null : null;
 
     // Hydration hatasını önlemek için client-side mounting'i bekle
     if (!mounted) {
@@ -98,28 +135,43 @@ export default function AdminPage() {
 
             <ErrorAlert error={error} onClose={clearError} />
 
-            {showCreateForm && (
-                <CreateDropForm
-                    formData={formData}
-                    updateFormField={updateFormField}
-                    onSubmit={handleCreate}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    isVisible={!!toast}
+                    onClose={() => setToast(null)}
                 />
             )}
 
-            {editingDrop && (
-                <EditDropForm
-                    formData={formData}
-                    updateFormField={updateFormField}
-                    onSubmit={handleUpdate}
-                    onCancel={cancelEdit}
-                />
-            )}
+            <CreateDropModal
+                isOpen={showCreateForm}
+                onClose={handleCloseCreateModal}
+                formData={formData}
+                updateFormField={updateFormField}
+                onSubmit={handleCreate}
+            />
+
+            <EditDropModal
+                isOpen={!!editingDrop}
+                onClose={handleCloseEditModal}
+                formData={formData}
+                updateFormField={updateFormField}
+                onSubmit={handleUpdate}
+            />
+
+            <DeleteConfirmModal
+                isOpen={!!deleteDropId}
+                onClose={handleCloseDeleteModal}
+                drop={dropToDelete}
+                onConfirm={handleDeleteConfirm}
+            />
 
             <DropsTable
                 drops={drops}
                 loading={loading}
                 onEdit={startEdit}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
             />
         </div>
     );
