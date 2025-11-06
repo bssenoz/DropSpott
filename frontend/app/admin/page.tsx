@@ -11,11 +11,12 @@ import { EditDropModal } from '@/components/admin/EditDropModal';
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { DropsTable } from '@/components/admin/DropsTable';
 import { Toast } from '@/components/Toast';
+import Pagination from '@/components/Pagination';
 
 export default function AdminPage() {
     const { isAuthenticated, token, user } = useAuth();
     const { formData, editingDrop, showCreateForm } = useAdminState();
-    const { activeDrops, loading, error } = useDropsState();
+    const { activeDrops, loading, error, pagination } = useDropsState();
     const { fetchActiveDrops } = useDropsActions();
     const {
         createDrop,
@@ -31,6 +32,7 @@ export default function AdminPage() {
     const [mounted, setMounted] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [deleteDropId, setDeleteDropId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         setMounted(true);
@@ -39,9 +41,15 @@ export default function AdminPage() {
     useEffect(() => {
         // Sadece admin kullanıcıları için drop'ları yükle
         if (mounted && isAuthenticated && user?.role === 'ADMIN') {
-            fetchActiveDrops();
+            fetchActiveDrops(currentPage, 10);
         }
-    }, [mounted, isAuthenticated, user?.role, fetchActiveDrops]);
+    }, [mounted, isAuthenticated, user?.role, currentPage]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // Sayfanın üstüne kaydır
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,7 +59,7 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             toggleCreateForm();
-            await fetchActiveDrops(); // Drop'ları yeniden yükle
+            await fetchActiveDrops(currentPage, 10); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla oluşturuldu!', type: 'success' });
         } else {
             setToast({ message: 'Drop oluşturulurken bir hata oluştu.', type: 'error' });
@@ -74,7 +82,7 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             cancelEdit();
-            await fetchActiveDrops(); // Drop'ları yeniden yükle
+            await fetchActiveDrops(currentPage, 10); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla güncellendi!', type: 'success' });
         } else {
             setToast({ message: 'Drop güncellenirken bir hata oluştu.', type: 'error' });
@@ -90,7 +98,7 @@ export default function AdminPage() {
         
         const result = await deleteDrop(token, deleteDropId);
         if (result) {
-            await fetchActiveDrops(); // Drop'ları yeniden yükle
+            await fetchActiveDrops(currentPage, 10); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla silindi!', type: 'success' });
         } else {
             setToast({ message: 'Drop silinirken bir hata oluştu.', type: 'error' });
@@ -218,6 +226,19 @@ export default function AdminPage() {
                 onEdit={startEdit}
                 onDelete={handleDeleteClick}
             />
+
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+                <div className="mt-6">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={pagination.totalPages}
+                        hasNextPage={pagination.hasNextPage}
+                        hasPrevPage={pagination.hasPrevPage}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            )}
         </div>
     );
 }

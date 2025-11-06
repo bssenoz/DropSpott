@@ -15,7 +15,7 @@ import {
 const prisma = new PrismaClient();
 
 /**
- * GET /drops - Aktif drop listesi
+ * GET /drops - Aktif drop listesi (pagination destekli)
  */
 export const getActiveDrops = async (
     req: Request,
@@ -25,6 +25,21 @@ export const getActiveDrops = async (
     try {
         const now = new Date();
         
+        // Pagination parametreleri
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        // Toplam kayıt sayısını al
+        const total = await prisma.drop.count({
+            where: {
+                claimWindowEnd: {
+                    gt: now
+                }
+            }
+        });
+
+        // Pagination ile drop'ları getir
         const drops = await prisma.drop.findMany({
             where: {
                 claimWindowEnd: {
@@ -40,12 +55,24 @@ export const getActiveDrops = async (
                         waitlistEntries: true
                     }
                 }
-            }
+            },
+            skip,
+            take: limit
         });
+
+        const totalPages = Math.ceil(total / limit);
 
         res.status(200).json({
             message: 'Aktif drop\'lar başarıyla getirildi.',
-            drops
+            drops,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         });
     } catch (error: any) {
         await apiErrorHandler(error, req, res, next, {

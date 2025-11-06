@@ -8,13 +8,15 @@ import { useAuthStore } from '@/store/authStore';
 import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
 import ProgressBar from '@/components/ProgressBar';
+import Pagination from '@/components/Pagination';
 
 export default function DropsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const { activeDrops, loading, error } = useDropsState();
+  const { activeDrops, loading, error, pagination } = useDropsState();
   const { fetchActiveDrops } = useDropsActions();
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setMounted(true);
@@ -28,9 +30,15 @@ export default function DropsPage() {
 
   useEffect(() => {
     if (mounted && isAuthenticated) {
-      fetchActiveDrops();
+      fetchActiveDrops(currentPage, 9); // 3x3 grid için 9 item
     }
-  }, [mounted, isAuthenticated, fetchActiveDrops]);
+  }, [mounted, isAuthenticated, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Sayfanın üstüne kaydır
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Hydration ve authentication kontrolü için bekle
   if (!mounted || !isAuthenticated) {
@@ -200,6 +208,17 @@ export default function DropsPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={pagination.totalPages}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   );

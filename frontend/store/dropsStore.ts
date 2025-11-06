@@ -26,6 +26,15 @@ export interface IClaimCode {
     usedAt?: string;
 }
 
+interface IPaginationInfo {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
 interface IDropsState {
     activeDrops: ActiveDrop[];
     currentDrop: ActiveDrop | null;
@@ -33,10 +42,11 @@ interface IDropsState {
     claimCode: IClaimCode | null;
     loading: boolean;
     error: string | null;
+    pagination: IPaginationInfo | null;
 }
 
 interface IDropsActions {
-    fetchActiveDrops: () => Promise<void>;
+    fetchActiveDrops: (page?: number, limit?: number) => Promise<void>;
     fetchDrop: (id: string) => Promise<void>;
     joinWaitlist: (token: string, dropId: string) => Promise<boolean>;
     leaveWaitlist: (token: string, dropId: string) => Promise<boolean>;
@@ -58,15 +68,19 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
     claimCode: null,
     loading: false,
     error: null,
+    pagination: null,
 
     // Actions
-    fetchActiveDrops: async () => {
+    fetchActiveDrops: async (page: number = 1, limit: number = 10) => {
         set({ loading: true, error: null });
         
         try {
-            const response = await axios.get(`${API_URL}`);
+            const response = await axios.get(`${API_URL}`, {
+                params: { page, limit }
+            });
             set({ 
                 activeDrops: response.data.drops || [], 
+                pagination: response.data.pagination || null,
                 loading: false 
             });
         } catch (err) {
@@ -126,7 +140,12 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
                 } : null
             });
             
-            await get().fetchActiveDrops();
+            // Mevcut pagination bilgisini koru
+            const currentPagination = get().pagination;
+            await get().fetchActiveDrops(
+                currentPagination?.page || 1,
+                currentPagination?.limit || 10
+            );
             
             return true;
         } catch (err) {
@@ -156,7 +175,12 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
                 } : null
             });
             
-            await get().fetchActiveDrops();
+            // Mevcut pagination bilgisini koru
+            const currentPagination = get().pagination;
+            await get().fetchActiveDrops(
+                currentPagination?.page || 1,
+                currentPagination?.limit || 10
+            );
             
             return true;
         } catch (err) {
@@ -262,8 +286,9 @@ export const useDropsState = () => {
     const claimCode = useDropsStore((state) => state.claimCode);
     const loading = useDropsStore((state) => state.loading);
     const error = useDropsStore((state) => state.error);
+    const pagination = useDropsStore((state) => state.pagination);
     
-    return { activeDrops, currentDrop, waitlistEntry, claimCode, loading, error };
+    return { activeDrops, currentDrop, waitlistEntry, claimCode, loading, error, pagination };
 };
 
 export const useDropsActions = () => {
