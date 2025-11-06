@@ -12,7 +12,7 @@ import { DropsTable } from '@/components/admin/DropsTable';
 import { Toast } from '@/components/Toast';
 
 export default function AdminPage() {
-    const { isAuthenticated, token } = useAuth();
+    const { isAuthenticated, token, user } = useAuth();
     const { drops, loading, error, formData, editingDrop, showCreateForm } = useAdminState();
     const {
         fetchDrops,
@@ -35,10 +35,11 @@ export default function AdminPage() {
     }, []);
 
     useEffect(() => {
-        if (mounted && isAuthenticated && token) {
+        // Sadece admin kullanıcıları için drop'ları yükle
+        if (mounted && isAuthenticated && token && user?.role === 'ADMIN') {
             fetchDrops(token);
         }
-    }, [mounted, isAuthenticated, token, fetchDrops]);
+    }, [mounted, isAuthenticated, token, user?.role, fetchDrops]);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -121,6 +122,32 @@ export default function AdminPage() {
             <div className="container mx-auto px-4 py-8">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-red-800">Admin paneline erişmek için giriş yapmanız gerekiyor.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Admin olmayan kullanıcılar için erişim engelleme
+    if (user?.role !== 'ADMIN') {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="text-lg font-semibold text-red-800 mb-2">
+                                Erişim Reddedildi
+                            </h2>
+                            <p className="text-red-700">
+                                Bu sayfaya erişmek için admin yetkisine sahip olmanız gerekiyor. 
+                                Mevcut rolünüz: <span className="font-semibold">{user?.role === 'USER' ? 'Kullanıcı' : 'Bilinmeyen'}</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
