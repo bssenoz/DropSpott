@@ -4,7 +4,7 @@ import { authenticate } from '../middleware/authMiddleware';
 
 const router = Router();
 
-router.get('/', dropsController.getActiveDrops);
+router.get('/', authenticate, dropsController.getActiveDrops);
 router.get('/:id/waitlist-status', authenticate, dropsController.getWaitlistStatus);
 router.post('/:id/join', authenticate, dropsController.joinWaitlist);
 router.post('/:id/leave', authenticate, dropsController.leaveWaitlist);

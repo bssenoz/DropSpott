@@ -22,7 +22,11 @@ export const getActiveDrops = async (
     res: Response,
     next: NextFunction
 ) => {
+    const userId = req.userId;
+    
     try {
+        requireAuth(userId);
+        
         const now = new Date();
         
         // Pagination parametreleri
@@ -77,7 +81,10 @@ export const getActiveDrops = async (
     } catch (error: any) {
         await apiErrorHandler(error, req, res, next, {
             context: 'Get Active Drops',
-            defaultMessage: 'Drop\'lar listelenirken bir hata oluştu.'
+            defaultMessage: 'Drop\'lar listelenirken bir hata oluştu.',
+            customMessages: {
+                'UNAUTHORIZED': 'Yetkilendirme gereklidir.'
+            }
         });
     }
 };
