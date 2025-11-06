@@ -11,6 +11,7 @@ interface IWaitlistActionsProps {
   onJoin: () => void;
   onLeave: () => void;
   isAdmin?: boolean;
+  hasClaimCode?: boolean;
 }
 
 export default function WaitlistActions({
@@ -22,6 +23,7 @@ export default function WaitlistActions({
   onJoin,
   onLeave,
   isAdmin = false,
+  hasClaimCode = false,
 }: IWaitlistActionsProps) {
   // Admin kullanıcıları waitlist'e katılamaz
   if (isAdmin) {
@@ -56,8 +58,9 @@ export default function WaitlistActions({
       ) : (
         <button
           onClick={onLeave}
-          disabled={isLeaving}
+          disabled={isLeaving || hasClaimCode}
           className="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+          title={hasClaimCode ? "Claim kodunuz olduğu için waitlist'ten ayrılamazsınız" : ""}
         >
           {isLeaving ? (
             <>

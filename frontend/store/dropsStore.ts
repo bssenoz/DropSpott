@@ -213,15 +213,22 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
             } else {
                 set({ waitlistEntry: null });
             }
+
+            // Claim code bilgisini de güncelle
+            if (response.data.claimCode) {
+                set({ claimCode: response.data.claimCode });
+            } else {
+                set({ claimCode: null });
+            }
         } catch (err) {
             if (axios.isAxiosError(err) && err.response) {
                 if (err.response.status === 401) {
-                    set({ waitlistEntry: null });
+                    set({ waitlistEntry: null, claimCode: null });
                 } else {
-                    set({ waitlistEntry: null });
+                    set({ waitlistEntry: null, claimCode: null });
                 }
             } else {
-                set({ waitlistEntry: null });
+                set({ waitlistEntry: null, claimCode: null });
             }
         }
     },

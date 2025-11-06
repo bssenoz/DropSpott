@@ -157,9 +157,18 @@ export const getWaitlistStatus = async (
 
         const entry = await findWaitlistEntry(userId, dropId);
 
+        // Claim code kontrolü
+        const claimCode = await prisma.claimCode.findFirst({
+            where: {
+                userId,
+                dropId
+            }
+        });
+
         res.status(200).json({
             isOnWaitlist: !!entry,
-            entry: entry || null
+            entry: entry || null,
+            claimCode: claimCode || null
         });
     } catch (error: any) {
         await apiErrorHandler(error, req, res, next, {
@@ -195,6 +204,18 @@ export const leaveWaitlist = async (
                 };
             }
 
+            // Claim code kontrolü - claim code varsa waitlist'ten ayrılamaz
+            const existingClaimCode = await tx.claimCode.findFirst({
+                where: {
+                    userId,
+                    dropId
+                }
+            });
+
+            if (existingClaimCode) {
+                throw new Error('HAS_CLAIM_CODE');
+            }
+
             const position = entry.position;
 
             await tx.waitlistEntry.delete({
@@ -226,7 +247,8 @@ export const leaveWaitlist = async (
             context: 'Leave Waitlist',
             defaultMessage: 'Waitlist\'ten ayrılırken bir hata oluştu.',
             customMessages: {
-                'UNAUTHORIZED': 'Yetkilendirme gereklidir.'
+                'UNAUTHORIZED': 'Yetkilendirme gereklidir.',
+                'HAS_CLAIM_CODE': 'Claim kodunuz olduğu için waitlist\'ten ayrılamazsınız.'
             }
         });
     }

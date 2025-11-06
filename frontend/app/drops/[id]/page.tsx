@@ -19,7 +19,7 @@ export default function DropDetailPage() {
   const router = useRouter();
   const dropId = params.id as string;
   
-  const { currentDrop, waitlistEntry, loading, error } = useDropsState();
+  const { currentDrop, waitlistEntry, claimCode, loading, error } = useDropsState();
   const { fetchDrop, joinWaitlist, leaveWaitlist, checkWaitlistStatus } = useDropsActions();
   const { token, isAuthenticated, user } = useAuth();
   
@@ -47,6 +47,7 @@ export default function DropDetailPage() {
       fetchDrop(dropId);
       
       if (token && user?.role !== 'ADMIN') {
+        // waitlist-status endpoint'i artık claim code bilgisini de döndürüyor
         checkWaitlistStatus(token, dropId);
       }
     }
@@ -260,6 +261,7 @@ export default function DropDetailPage() {
               onJoin={handleJoinWaitlist}
               onLeave={handleLeaveWaitlist}
               isAdmin={user?.role === 'ADMIN'}
+              hasClaimCode={!!claimCode}
             />
           </div>
         </div>
