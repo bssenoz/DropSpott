@@ -75,8 +75,16 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
+            // Token'ı authStore'dan al
+            const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+            
+            if (!token) {
+                throw new Error('UNAUTHORIZED');
+            }
+            
             const response = await axios.get(`${API_URL}`, {
-                params: { page, limit }
+                params: { page, limit },
+                headers: { Authorization: `Bearer ${token}` }
             });
             set({ 
                 activeDrops: response.data.drops || [], 
@@ -95,7 +103,16 @@ export const useDropsStore = create<DropsStore>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
-            const response = await axios.get(`${API_URL}`);
+            // Token'ı authStore'dan al
+            const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+            
+            if (!token) {
+                throw new Error('UNAUTHORIZED');
+            }
+            
+            const response = await axios.get(`${API_URL}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             const drops = response.data.drops || [];
             const drop = drops.find((d: ActiveDrop) => d.id === id);
             

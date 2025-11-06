@@ -38,7 +38,7 @@ export default function DropDetailPage() {
 
   useEffect(() => {
     if (mounted && !isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/');
     }
   }, [mounted, isAuthenticated, router]);
 
@@ -79,7 +79,7 @@ export default function DropDetailPage() {
 
   const handleJoinWaitlist = async () => {
     if (!isAuthenticated || !token) {
-      router.push('/auth/login');
+      router.push('/');
       return;
     }
 

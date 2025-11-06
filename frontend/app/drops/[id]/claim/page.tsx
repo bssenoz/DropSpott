@@ -30,7 +30,7 @@ export default function ClaimPage() {
 
   useEffect(() => {
     if (mounted && !isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/');
     }
   }, [mounted, isAuthenticated, router]);
 
