@@ -122,11 +122,14 @@ export const apiErrorHandler = async (
     if (logError) {
         logError(error, { context, statusCode, errorMessage });
     } else {
-        console.error(`${context} hatası:`, {
-            message: errorMessage,
-            status: statusCode,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        // Test ortamında console.error'u suppress et
+        if (process.env.NODE_ENV !== 'test') {
+            console.error(`${context} hatası:`, {
+                message: errorMessage,
+                status: statusCode,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
+        }
     }
 
     res.status(statusCode).json(errorResponse);
