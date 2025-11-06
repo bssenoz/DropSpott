@@ -21,7 +21,7 @@ export default function DropDetailPage() {
   
   const { currentDrop, waitlistEntry, loading, error } = useDropsState();
   const { fetchDrop, joinWaitlist, leaveWaitlist, checkWaitlistStatus } = useDropsActions();
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
   
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -34,11 +34,11 @@ export default function DropDetailPage() {
   useEffect(() => {
     fetchDrop(dropId);
     
-    // Check waitlist status if authenticated
-    if (isAuthenticated && token) {
+    // Check waitlist status if authenticated and not admin
+    if (isAuthenticated && token && user?.role !== 'ADMIN') {
       checkWaitlistStatus(token, dropId);
     }
-  }, [dropId, fetchDrop, isAuthenticated, token, checkWaitlistStatus]);
+  }, [dropId, fetchDrop, isAuthenticated, token, user?.role, checkWaitlistStatus]);
 
   const getDropStatus = (): 'upcoming' | 'active' | 'ended' | null => {
     if (!currentDrop) return null;
@@ -191,7 +191,8 @@ export default function DropDetailPage() {
             claimWindowEnd={currentDrop.claimWindowEnd}
           />
 
-          {waitlistEntry && (
+          {/* Waitlist durumu sadece admin olmayan kullanıcılar için gösterilir */}
+          {waitlistEntry && user?.role !== 'ADMIN' && (
             <WaitlistStatus
               position={waitlistEntry.position}
               stock={currentDrop.stock}
@@ -206,6 +207,7 @@ export default function DropDetailPage() {
             isLeaving={isLeaving}
             onJoin={handleJoinWaitlist}
             onLeave={handleLeaveWaitlist}
+            isAdmin={user?.role === 'ADMIN'}
           />
         </div>
       </div>

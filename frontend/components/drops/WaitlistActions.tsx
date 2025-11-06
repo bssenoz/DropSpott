@@ -10,6 +10,7 @@ interface IWaitlistActionsProps {
   isLeaving: boolean;
   onJoin: () => void;
   onLeave: () => void;
+  isAdmin?: boolean;
 }
 
 export default function WaitlistActions({
@@ -20,7 +21,13 @@ export default function WaitlistActions({
   isLeaving,
   onJoin,
   onLeave,
+  isAdmin = false,
 }: IWaitlistActionsProps) {
+  // Admin kullanıcıları waitlist'e katılamaz
+  if (isAdmin) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       {!hasWaitlistEntry ? (

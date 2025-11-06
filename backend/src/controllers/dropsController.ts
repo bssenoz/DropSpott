@@ -65,9 +65,17 @@ export const joinWaitlist = async (
 ) => {
     const { id: dropId } = req.params;
     const userId = req.userId;
+    const userRole = req.userRole;
 
     try {
         requireAuth(userId);
+
+        // Admin kullanıcıları waitlist'e katılamaz
+        if (userRole === 'ADMIN') {
+            return res.status(403).json({
+                message: 'Admin kullanıcıları waitlist\'e katılamaz.'
+            });
+        }
 
         const result = await prisma.$transaction(async (tx) => {
             const drop = await findDropById(dropId, tx);

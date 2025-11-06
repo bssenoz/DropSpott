@@ -21,9 +21,9 @@ export const signup = async (req: Request<{}, {}, AuthBody>, res: Response, next
     try {
         const passwordHash = await bcrypt.hash(password, 10);
         
-        // İlk kaydolan kullanıcıyı ADMIN yap
-        const userCount = await prisma.user.count();
-        const role: Role = userCount === 0 ? 'ADMIN' : 'USER'; 
+        // Belirli email adresine sahip kullanıcıyı ADMIN yap
+        const ADMIN_EMAIL = 'admin@gmail.com';
+        const role: Role = email === ADMIN_EMAIL ? 'ADMIN' : 'USER'; 
 
         const user = await prisma.user.create({
             data: {
