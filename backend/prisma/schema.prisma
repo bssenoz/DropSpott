@@ -18,7 +18,7 @@ model User {
   passwordHash String
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime?
   waitlistEntries WaitlistEntry[]
   claimCodes    ClaimCode[]
 }
@@ -31,7 +31,7 @@ model Drop {
   claimWindowStart DateTime
   claimWindowEnd   DateTime
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime?
   waitlistEntries WaitlistEntry[]
   claimCodes      ClaimCode[]
 }
