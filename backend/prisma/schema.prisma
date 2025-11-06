@@ -37,16 +37,18 @@ model Drop {
 }
 
 model WaitlistEntry {
-  id        String   @id @default(uuid())
-  userId    String
-  dropId    String
-  position  Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  drop      Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  userId        String
+  dropId        String
+  position      Int
+  priorityScore Int
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drop          Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
 
   @@unique([userId, dropId])
   @@index([dropId, position])
+  @@index([dropId, priorityScore])
 }
 
 model ClaimCode {
@@ -60,6 +62,7 @@ model ClaimCode {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   drop      Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, dropId]) // Bir kullanıcı bir drop için sadece bir claim code alabilir
   @@index([dropId])
   @@index([userId])
   @@index([code])

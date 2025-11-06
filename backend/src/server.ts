@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
+import dropsRoutes from './routes/dropsRoutes';
 
 // Ortam değişkenlerini yükle
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
+app.use('/drops', dropsRoutes);
 
 
 // Genel Hata Yakalama
