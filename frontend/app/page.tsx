@@ -1,165 +1,162 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useDropsState, useDropsActions } from '@/store/dropsStore';
-import StatusBadge from '@/components/StatusBadge';
-import CountdownTimer from '@/components/CountdownTimer';
-import ProgressBar from '@/components/ProgressBar';
+import { useAuthStore } from '@/store/authStore';
 
 export default function HomePage() {
-  const { activeDrops, loading, error } = useDropsState();
-  const { fetchActiveDrops } = useDropsActions();
+  const { isAuthenticated, user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchActiveDrops();
-  }, [fetchActiveDrops]);
+    setMounted(true);
+  }, []);
 
-  const getDropStatus = (drop: typeof activeDrops[0]): 'upcoming' | 'active' | 'ended' => {
-    const now = new Date();
-    const claimStart = new Date(drop.claimWindowStart);
-    const claimEnd = new Date(drop.claimWindowEnd);
+  // Hydration hatasını önlemek için client-side mounting'i bekle
+  const showAuthenticated = mounted && isAuthenticated;
 
-    if (now < claimStart) {
-      return 'upcoming';
-    } else if (now >= claimStart && now <= claimEnd) {
-      return 'active';
-    } else {
-      return 'ended';
-    }
-  };
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      {/* Hero Section */}
+      <div className="text-center mb-16">
+        <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          {showAuthenticated ? `Hoş Geldiniz, ${user?.email?.split('@')[0]}!` : "DropSpot'a Hoş Geldiniz"}
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          {showAuthenticated 
+            ? "Aktif drop'ları keşfedin ve waitlist'e katılarak sınırlı stok fırsatlarından yararlanın."
+            : "Özel ürünler ve etkinlikler için sınırlı stok fırsatları. Waitlist'e katılın, claim window'da hak kazanın."
+          }
+        </p>
+        {showAuthenticated ? (
+          <div className="flex gap-4 justify-center">
+            <Link
+              href="/drops"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
+            >
+              Drop'ları Görüntüle
+            </Link>
+          </div>
+        ) : (
+          <div className="flex gap-4 justify-center">
+            <Link
+              href="/auth/login"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md"
+            >
+              Giriş Yap
+            </Link>
+            <Link
+              href="/auth/register"
+              className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              Kayıt Ol
+            </Link>
+          </div>
+        )}
+      </div>
 
-  if (loading) {
-    return (
-      <div>
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">DropSpot</h1>
-          <p className="text-gray-600">Özel ürünler ve etkinlikler için sınırlı stok fırsatları</p>
+      {/* Features Section */}
+      <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Waitlist Sistemi</h3>
+          <p className="text-gray-600 text-sm">
+            İstediğiniz drop için waitlist'e katılın ve sıranızı alın. Stok sınırlı olduğu için erken katılım önemlidir.
+          </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
-              <div className="h-5 bg-gray-200 rounded mb-3"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </div>
-          ))}
+
+        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Claim Window</h3>
+          <p className="text-gray-600 text-sm">
+            Belirlenen tarih aralığında claim window açılır. Waitlist sıranız stok içindeyse ürünü claim edebilirsiniz.
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Sınırlı Stok</h3>
+          <p className="text-gray-600 text-sm">
+            Her drop için belirli bir stok miktarı vardır. Waitlist'teki sıranız stok içindeyse claim hakkı kazanırsınız.
+          </p>
         </div>
       </div>
-    );
-  }
 
-  if (error) {
-    return (
-      <div>
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">DropSpot</h1>
-          <p className="text-gray-600">Özel ürünler ve etkinlikler için sınırlı stok fırsatları</p>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-red-800 text-sm">{error}</p>
+      {/* How It Works Section */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-8 mb-16">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Nasıl Çalışır?</h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          <div className="text-center">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-3">
+              1
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Kayıt Ol</h4>
+            <p className="text-sm text-gray-600">
+              Hesap oluşturun ve sisteme giriş yapın
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-3">
+              2
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Waitlist'e Katıl</h4>
+            <p className="text-sm text-gray-600">
+              İstediğiniz drop için waitlist'e katılın ve sıranızı alın
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-3">
+              3
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Claim Window'u Bekle</h4>
+            <p className="text-sm text-gray-600">
+              Belirlenen tarihte claim window açılır
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-3">
+              4
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Claim Et</h4>
+            <p className="text-sm text-gray-600">
+              Sıranız stok içindeyse ürünü claim edin
+            </p>
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div>
-      {/* Header Section */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">DropSpot</h1>
-        <p className="text-gray-600 leading-relaxed">
-          Özel ürünler ve etkinlikler için sınırlı stok fırsatları. Waitlist'e katılın, claim window'da hak kazanın.
+      {/* CTA Section */}
+      <div className="text-center bg-white border border-gray-200 rounded-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          {showAuthenticated ? "Drop'ları Keşfedin" : "Hemen Başlayın"}
+        </h2>
+        <p className="text-gray-600 mb-6">
+          {showAuthenticated 
+            ? "Aktif drop'ları görüntüleyin ve waitlist'e katılarak sınırlı stok fırsatlarından yararlanın."
+            : "Aktif drop'ları görmek ve waitlist'e katılmak için giriş yapın veya kayıt olun."
+          }
         </p>
+        <div className="flex gap-4 justify-center">
+          <Link
+            href="/drops"
+            className="px-6 py-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-semibold rounded-lg hover:from-gray-800 hover:to-gray-700 transition-all shadow-sm hover:shadow-md"
+          >
+            Drop'ları Görüntüle
+          </Link>
+        </div>
       </div>
-
-      {/* Drops Grid */}
-      {activeDrops.length === 0 ? (
-        <div className="bg-white border border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Henüz aktif drop yok</h3>
-          <p className="text-gray-600 text-sm">Yeni drop'lar yayınlandığında burada görünecek.</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {activeDrops.map((drop) => {
-            const status = getDropStatus(drop);
-
-            return (
-              <Link
-                key={drop.id}
-                href={`/drops/${drop.id}`}
-                className="group bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-300 hover:shadow-sm transition-all flex flex-col"
-              >
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors flex-1 pr-2">
-                    {drop.title}
-                  </h2>
-                  <StatusBadge status={status} />
-                </div>
-
-                {/* Description */}
-                {drop.description && (
-                  <p className="text-gray-600 text-sm mb-5 line-clamp-2 flex-1">
-                    {drop.description}
-                  </p>
-                )}
-
-                {/* Countdown Timer */}
-                {status === 'upcoming' && (
-                  <div className="mb-5">
-                    <CountdownTimer
-                      targetDate={drop.claimWindowStart}
-                      label="Claim Window Başlıyor"
-                      className="text-sm"
-                    />
-                  </div>
-                )}
-
-                {/* Progress Bar */}
-                <div className="mb-5">
-                  <ProgressBar
-                    current={drop._count.waitlistEntries}
-                    total={drop.stock}
-                    label={`${drop._count.waitlistEntries} kişi waitlist'te`}
-                    showNumbers={false}
-                  />
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-5 pt-4 border-t border-gray-100">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Stok</div>
-                    <div className="text-lg font-semibold text-gray-900">{drop.stock}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Waitlist</div>
-                    <div className="text-lg font-semibold text-blue-600">{drop._count.waitlistEntries}</div>
-                  </div>
-                </div>
-
-                {/* CTA Button */}
-                <div className="mt-auto pt-4 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-sm font-medium text-blue-600 group-hover:text-blue-700">
-                    <span>Detayları Gör</span>
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

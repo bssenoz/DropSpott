@@ -25,6 +25,7 @@ export default function DropDetailPage() {
   
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
     message: '',
     type: 'info',
@@ -32,13 +33,24 @@ export default function DropDetailPage() {
   });
 
   useEffect(() => {
-    fetchDrop(dropId);
-    
-    // Check waitlist status if authenticated and not admin
-    if (isAuthenticated && token && user?.role !== 'ADMIN') {
-      checkWaitlistStatus(token, dropId);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isAuthenticated) {
+      router.push('/auth/login');
     }
-  }, [dropId, fetchDrop, isAuthenticated, token, user?.role, checkWaitlistStatus]);
+  }, [mounted, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      fetchDrop(dropId);
+      
+      if (token && user?.role !== 'ADMIN') {
+        checkWaitlistStatus(token, dropId);
+      }
+    }
+  }, [mounted, dropId, fetchDrop, isAuthenticated, token, user?.role, checkWaitlistStatus]);
 
   const getDropStatus = (): 'upcoming' | 'active' | 'ended' | null => {
     if (!currentDrop) return null;
@@ -113,6 +125,18 @@ export default function DropDetailPage() {
     }
   };
 
+  // Hydration ve authentication kontrolü için bekle
+  if (!mounted || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -147,7 +171,7 @@ export default function DropDetailPage() {
       {/* Back Button */}
       <div className="mb-6">
         <Link
-          href="/"
+          href="/drops"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,4 +238,3 @@ export default function DropDetailPage() {
     </div>
   );
 }
-  
