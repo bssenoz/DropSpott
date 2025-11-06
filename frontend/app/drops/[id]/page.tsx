@@ -1,12 +1,215 @@
-export default function DropDetailPage({ params }: { params: { id: string } }) {
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useDropsState, useDropsActions } from '@/store/dropsStore';
+import { useAuth } from '@/store/authStore';
+import { Toast } from '@/components/Toast';
+import ProgressBar from '@/components/ProgressBar';
+import DropHeader from '@/components/drops/DropHeader';
+import DropStats from '@/components/drops/DropStats';
+import ClaimWindowInfo from '@/components/drops/ClaimWindowInfo';
+import WaitlistStatus from '@/components/drops/WaitlistStatus';
+import WaitlistActions from '@/components/drops/WaitlistActions';
+import StatusCountdown from '@/components/drops/StatusCountdown';
+
+export default function DropDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const dropId = params.id as string;
+  
+  const { currentDrop, waitlistEntry, loading, error } = useDropsState();
+  const { fetchDrop, joinWaitlist, leaveWaitlist, checkWaitlistStatus } = useDropsActions();
+  const { token, isAuthenticated } = useAuth();
+  
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+    message: '',
+    type: 'info',
+    isVisible: false,
+  });
+
+  useEffect(() => {
+    fetchDrop(dropId);
+    
+    // Check waitlist status if authenticated
+    if (isAuthenticated && token) {
+      checkWaitlistStatus(token, dropId);
+    }
+  }, [dropId, fetchDrop, isAuthenticated, token, checkWaitlistStatus]);
+
+  const getDropStatus = (): 'upcoming' | 'active' | 'ended' | null => {
+    if (!currentDrop) return null;
+    
+    const now = new Date();
+    const claimStart = new Date(currentDrop.claimWindowStart);
+    const claimEnd = new Date(currentDrop.claimWindowEnd);
+
+    if (now < claimStart) {
+      return 'upcoming';
+    } else if (now >= claimStart && now <= claimEnd) {
+      return 'active';
+    } else {
+      return 'ended';
+    }
+  };
+
+  const isClaimWindowOpen = () => {
+    if (!currentDrop) return false;
+    const now = new Date();
+    const claimStart = new Date(currentDrop.claimWindowStart);
+    const claimEnd = new Date(currentDrop.claimWindowEnd);
+    return now >= claimStart && now <= claimEnd;
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!isAuthenticated || !token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    setIsJoining(true);
+    const success = await joinWaitlist(token, dropId);
+    setIsJoining(false);
+
+    if (success) {
+      setToast({
+        message: 'Waitlist\'e başarıyla katıldınız!',
+        type: 'success',
+        isVisible: true,
+      });
+    } else {
+      setToast({
+        message: 'Waitlist\'e katılırken bir hata oluştu.',
+        type: 'error',
+        isVisible: true,
+      });
+    }
+  };
+
+  const handleLeaveWaitlist = async () => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
+
+    setIsLeaving(true);
+    const success = await leaveWaitlist(token, dropId);
+    setIsLeaving(false);
+
+    if (success) {
+      setToast({
+        message: 'Waitlist\'ten başarıyla ayrıldınız.',
+        type: 'success',
+        isVisible: true,
+      });
+    } else {
+      setToast({
+        message: 'Waitlist\'ten ayrılırken bir hata oluştu.',
+        type: 'error',
+        isVisible: true,
+      });
+    }
+  };
+
+  if (loading) {
     return (
-      <div>
-        <h1>Drop Detayı (ID: {params.id})</h1>
-        <p>Bu sayfada drop hakkında bilgiler görünecek.</p>
-        <button>Join Waitlist</button>
-        <button>Leave Waitlist</button>
-        <p><a href={`/drops/${params.id}/claim`}>Claim sayfasına git →</a></p>
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white border rounded-lg shadow-sm p-8 text-center">
+          <p className="text-gray-500">Yükleniyor...</p>
+        </div>
       </div>
     );
   }
+
+  if (error || !currentDrop) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error || 'Drop bulunamadı.'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const status = getDropStatus();
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
+
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Drop Listesine Dön
+        </Link>
+      </div>
+
+      {/* Main Content */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <DropHeader
+          title={currentDrop.title}
+          description={currentDrop.description}
+          status={status}
+        />
+
+        <div className="p-6 space-y-6">
+          <StatusCountdown
+            status={status}
+            claimWindowStart={currentDrop.claimWindowStart}
+            claimWindowEnd={currentDrop.claimWindowEnd}
+          />
+
+          <DropStats
+            stock={currentDrop.stock}
+            waitlistCount={currentDrop._count.waitlistEntries}
+          />
+
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <ProgressBar
+              current={currentDrop._count.waitlistEntries}
+              total={currentDrop.stock}
+              label="Waitlist Doluluk Oranı"
+              showNumbers={true}
+            />
+          </div>
+
+          <ClaimWindowInfo
+            claimWindowStart={currentDrop.claimWindowStart}
+            claimWindowEnd={currentDrop.claimWindowEnd}
+          />
+
+          {waitlistEntry && (
+            <WaitlistStatus
+              position={waitlistEntry.position}
+              stock={currentDrop.stock}
+            />
+          )}
+
+          <WaitlistActions
+            hasWaitlistEntry={!!waitlistEntry}
+            isClaimWindowOpen={isClaimWindowOpen()}
+            dropId={dropId}
+            isJoining={isJoining}
+            isLeaving={isLeaving}
+            onJoin={handleJoinWaitlist}
+            onLeave={handleLeaveWaitlist}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
   
