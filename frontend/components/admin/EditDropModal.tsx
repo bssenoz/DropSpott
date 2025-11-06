@@ -35,7 +35,7 @@ export function EditDropModal({ isOpen, onClose, formData, updateFormField, onSu
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Drop Düzenle" size="lg">
             <form onSubmit={handleSubmit} className="space-y-6">
-                <DropFormFields formData={formData} updateFormField={updateFormField} />
+                <DropFormFields formData={formData} updateFormField={updateFormField} disableStock={true} />
                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
                     <button
                         type="button"

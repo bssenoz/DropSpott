@@ -62,7 +62,15 @@ export default function AdminPage() {
         e.preventDefault();
         if (!token || !editingDrop) return;
         
-        const result = await updateDrop(token, editingDrop.id, formData);
+        const updateData: Partial<typeof formData> = {
+            title: formData.title,
+            description: formData.description,
+            // stock: drop oluşturulduktan sonra değiştirilemez, bu yüzden göndermiyoruz
+            claimWindowStart: formData.claimWindowStart,
+            claimWindowEnd: formData.claimWindowEnd
+        };
+        
+        const result = await updateDrop(token, editingDrop.id, updateData);
         if (result) {
             resetForm();
             cancelEdit();

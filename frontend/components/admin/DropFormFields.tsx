@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react';
 interface IDropFormFieldsProps {
     formData: DropFormData;
     updateFormField: <K extends keyof DropFormData>(field: K, value: DropFormData[K]) => void;
+    disableStock?: boolean; // Stok alanını devre dışı bırakmak için
 }
 
-export function DropFormFields({ formData, updateFormField }: IDropFormFieldsProps) {
+export function DropFormFields({ formData, updateFormField, disableStock = false }: IDropFormFieldsProps) {
     const [errors, setErrors] = useState<Partial<Record<keyof DropFormData, string>>>({});
 
     useEffect(() => {
@@ -90,6 +91,9 @@ export function DropFormFields({ formData, updateFormField }: IDropFormFieldsPro
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Stok Miktarı <span className="text-red-500">*</span>
+                    {disableStock && (
+                        <span className="ml-2 text-xs text-gray-500 font-normal">(Oluşturulduktan sonra değiştirilemez)</span>
+                    )}
                 </label>
                 <input
                     type="number"
@@ -97,15 +101,23 @@ export function DropFormFields({ formData, updateFormField }: IDropFormFieldsPro
                     min="0"
                     value={formData.stock}
                     onChange={(e) => updateFormField('stock', parseInt(e.target.value) || 0)}
+                    disabled={disableStock}
                     className={`w-full px-4 py-2.5 pr-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                        errors.stock
+                        disableStock
+                            ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                            : errors.stock
                             ? 'border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50'
                             : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white'
                     } text-gray-900 placeholder-gray-400`}
                     placeholder="0"
                 />
                 <div className="mt-1.5 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">Toplam kaç adet drop oluşturulacak?</p>
+                    <p className="text-xs text-gray-500">
+                        {disableStock 
+                            ? 'Stok miktarı drop oluşturulduktan sonra değiştirilemez'
+                            : 'Toplam kaç adet drop oluşturulacak?'
+                        }
+                    </p>
                     <span className="text-xs text-gray-400">adet</span>
                 </div>
                 {errors.stock && (
