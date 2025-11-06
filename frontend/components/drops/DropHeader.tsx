@@ -13,8 +13,8 @@ export default function DropHeader({ title, description, status }: IDropHeaderPr
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-8">
         <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight break-words">
               {title}
             </h1>
           </div>
@@ -28,7 +28,7 @@ export default function DropHeader({ title, description, status }: IDropHeaderPr
         {/* Description */}
         {description && (
           <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-gray-700 text-base leading-relaxed">
+            <p className="text-gray-700 text-base leading-relaxed break-words whitespace-pre-wrap">
               {description}
             </p>
           </div>

@@ -173,7 +173,7 @@ export default function DropDetailPage() {
   const status = getDropStatus();
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-x-hidden">
       <Toast
         message={toast.message}
         type={toast.type}
@@ -195,7 +195,7 @@ export default function DropDetailPage() {
       </div>
 
       {/* Header Section */}
-      <div className="mb-8">
+      <div className="mb-8 w-full max-w-full">
         <DropHeader
           title={currentDrop.title}
           description={currentDrop.description}
@@ -204,9 +204,9 @@ export default function DropDetailPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 lg:grid-cols-12 w-full max-w-full">
         {/* Left Column - Main Info (8 columns) */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-6 min-w-0">
           {/* Status Countdown - Full Width */}
           <StatusCountdown
             status={status}
@@ -217,7 +217,7 @@ export default function DropDetailPage() {
           {/* Progress and Stats Row */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Progress Bar */}
-            <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm min-w-0">
               <ProgressBar
                 current={currentDrop._count.waitlistEntries}
                 total={currentDrop.stock}
@@ -249,9 +249,9 @@ export default function DropDetailPage() {
         </div>
 
         {/* Right Column - Actions (4 columns) */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 min-w-0">
           <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm sticky top-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Aksiyonlar</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 break-words">Aksiyonlar</h3>
             <WaitlistActions
               hasWaitlistEntry={!!waitlistEntry}
               isClaimWindowOpen={isClaimWindowOpen()}
