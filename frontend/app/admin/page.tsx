@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/authStore';
 import { useAdminState, useAdminActions } from '@/store/adminStore';
+import { useDropsState, useDropsActions } from '@/store/dropsStore';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CreateDropModal } from '@/components/admin/CreateDropModal';
@@ -13,9 +14,10 @@ import { Toast } from '@/components/Toast';
 
 export default function AdminPage() {
     const { isAuthenticated, token, user } = useAuth();
-    const { drops, loading, error, formData, editingDrop, showCreateForm } = useAdminState();
+    const { formData, editingDrop, showCreateForm } = useAdminState();
+    const { activeDrops, loading, error } = useDropsState();
+    const { fetchActiveDrops } = useDropsActions();
     const {
-        fetchDrops,
         createDrop,
         updateDrop,
         deleteDrop,
@@ -24,8 +26,8 @@ export default function AdminPage() {
         startEdit,
         cancelEdit,
         toggleCreateForm,
-        clearError,
     } = useAdminActions();
+    const { clearError: clearDropsError } = useDropsActions();
     const [mounted, setMounted] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [deleteDropId, setDeleteDropId] = useState<string | null>(null);
@@ -36,10 +38,10 @@ export default function AdminPage() {
 
     useEffect(() => {
         // Sadece admin kullanıcıları için drop'ları yükle
-        if (mounted && isAuthenticated && token && user?.role === 'ADMIN') {
-            fetchDrops(token);
+        if (mounted && isAuthenticated && user?.role === 'ADMIN') {
+            fetchActiveDrops();
         }
-    }, [mounted, isAuthenticated, token, user?.role, fetchDrops]);
+    }, [mounted, isAuthenticated, user?.role, fetchActiveDrops]);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,6 +51,7 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             toggleCreateForm();
+            await fetchActiveDrops(); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla oluşturuldu!', type: 'success' });
         } else {
             setToast({ message: 'Drop oluşturulurken bir hata oluştu.', type: 'error' });
@@ -63,6 +66,7 @@ export default function AdminPage() {
         if (result) {
             resetForm();
             cancelEdit();
+            await fetchActiveDrops(); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla güncellendi!', type: 'success' });
         } else {
             setToast({ message: 'Drop güncellenirken bir hata oluştu.', type: 'error' });
@@ -78,6 +82,7 @@ export default function AdminPage() {
         
         const result = await deleteDrop(token, deleteDropId);
         if (result) {
+            await fetchActiveDrops(); // Drop'ları yeniden yükle
             setToast({ message: 'Drop başarıyla silindi!', type: 'success' });
         } else {
             setToast({ message: 'Drop silinirken bir hata oluştu.', type: 'error' });
@@ -99,7 +104,7 @@ export default function AdminPage() {
         cancelEdit();
     };
 
-    const dropToDelete = deleteDropId ? drops.find(d => d.id === deleteDropId) || null : null;
+    const dropToDelete = deleteDropId ? activeDrops.find(d => d.id === deleteDropId) || null : null;
 
     // Hydration hatasını önlemek için client-side mounting'i bekle
     if (!mounted) {
@@ -165,7 +170,7 @@ export default function AdminPage() {
                 onToggleCreateForm={toggleCreateForm} 
             />
 
-            <ErrorAlert error={error} onClose={clearError} />
+            <ErrorAlert error={error} onClose={clearDropsError} />
 
             {toast && (
                 <Toast
@@ -200,7 +205,7 @@ export default function AdminPage() {
             />
 
             <DropsTable
-                drops={drops}
+                drops={activeDrops}
                 loading={loading}
                 onEdit={startEdit}
                 onDelete={handleDeleteClick}

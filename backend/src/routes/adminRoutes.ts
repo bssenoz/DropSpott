@@ -8,7 +8,6 @@ const router = Router();
 router.use(authenticate);
 router.use(requireAdmin);
 
-router.get('/drops', adminController.getAllDrops);
 router.post('/drops', adminController.createDrop);
 router.put('/drops/:id', adminController.updateDrop);
 router.delete('/drops/:id', adminController.deleteDrop);
