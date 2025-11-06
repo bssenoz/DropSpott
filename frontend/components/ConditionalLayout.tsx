@@ -102,7 +102,7 @@ export default function ConditionalLayout({
                     href="/admin"
                     className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                   >
-                    Admin Panel
+                    Admin Paneli
                   </a>
                 )}
               </div>
@@ -186,7 +186,7 @@ export default function ConditionalLayout({
                   onClick={handleLinkClick}
                   className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors py-2"
                 >
-                  Admin Panel
+                  Admin Paneli
                 </a>
               )}
               <div className="border-t border-gray-200/50 pt-4 mt-2">
