@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { DropFormData } from '@/store/adminStore';
 import { DropFormFields } from './DropFormFields';
 import { Modal } from '@/components/Modal';
@@ -13,23 +14,58 @@ interface ICreateDropModalProps {
 }
 
 export function CreateDropModal({ isOpen, onClose, formData, updateFormField, onSubmit }: ICreateDropModalProps) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await onSubmit(e);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const isFormValid = formData.title.trim().length >= 3 && 
+                       formData.stock >= 0 && 
+                       formData.claimWindowStart && 
+                       formData.claimWindowEnd &&
+                       new Date(formData.claimWindowEnd) > new Date(formData.claimWindowStart);
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Yeni Drop Oluştur">
-            <form onSubmit={onSubmit} className="space-y-4">
+        <Modal isOpen={isOpen} onClose={onClose} title="Yeni Drop Oluştur" size="lg">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <DropFormFields formData={formData} updateFormField={updateFormField} />
-                <div className="flex justify-end gap-2 pt-4 border-t">
+                <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                        disabled={isSubmitting}
+                        className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         İptal
                     </button>
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        disabled={!isFormValid || isSubmitting}
+                        className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        Oluştur
+                        {isSubmitting ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Oluşturuluyor...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Oluştur
+                            </>
+                        )}
                     </button>
                 </div>
             </form>

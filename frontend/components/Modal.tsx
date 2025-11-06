@@ -12,17 +12,6 @@ interface IModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, size = 'md', compact = false }: IModalProps) {
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen]);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -53,20 +42,20 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', compact =
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={onClose}
         >
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" />
+
+            <div className="absolute inset-0  animate-fade-in" />
 
             {/* Modal */}
             <div
-                className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses} max-h-[90vh] overflow-y-auto`}
+                className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses} max-h-[90vh] flex flex-col border-2 border-gray-300 animate-slide-up`}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
-                <div className={`flex items-center justify-between border-b ${compact ? 'p-4' : 'p-6'}`}>
-                    <h2 className={`font-semibold text-gray-800 ${compact ? 'text-lg' : 'text-xl'}`}>{title}</h2>
+                {/* Header - Sticky */}
+                <div className={`sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white rounded-t-xl ${compact ? 'p-4' : 'p-6'}`}>
+                    <h2 className={`font-semibold text-gray-900 ${compact ? 'text-lg' : 'text-xl'}`}>{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-all duration-200"
                         aria-label="Kapat"
                     >
                         <svg
@@ -85,8 +74,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', compact =
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className={compact ? 'p-4' : 'p-6'}>
+                {/* Content - Scrollable */}
+                <div className={`flex-1 overflow-y-auto ${compact ? 'p-4' : 'p-6'}`}>
                     {children}
                 </div>
             </div>

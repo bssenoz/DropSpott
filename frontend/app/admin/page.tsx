@@ -104,13 +104,18 @@ export default function AdminPage() {
     // Hydration hatasını önlemek için client-side mounting'i bekle
     if (!mounted) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800">Admin Paneli</h1>
+            <div>
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-gray-200 animate-pulse"></div>
+                    <div>
+                        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
                 </div>
-                <div className="bg-white border rounded-lg shadow-sm">
-                    <div className="p-6 text-center text-gray-500">
-                        Yükleniyor...
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <div className="p-12 text-center">
+                        <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="mt-4 text-gray-600 font-medium">Yükleniyor...</p>
                     </div>
                 </div>
             </div>
@@ -119,7 +124,7 @@ export default function AdminPage() {
 
     if (!isAuthenticated) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-red-800">Admin paneline erişmek için giriş yapmanız gerekiyor.</p>
                 </div>
@@ -130,7 +135,7 @@ export default function AdminPage() {
     // Admin olmayan kullanıcılar için erişim engelleme
     if (user?.role !== 'ADMIN') {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
@@ -154,7 +159,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
             <AdminHeader 
                 showCreateForm={showCreateForm} 
                 onToggleCreateForm={toggleCreateForm} 
