@@ -122,11 +122,15 @@ export const updateDrop = async (
     const { id } = req.params;
     const { title, description, stock, claimWindowStart, claimWindowEnd } = req.body;
 
-    // Validasyon
-    if (stock !== undefined && stock < 0) {
-        return res.status(400).json({
-            message: 'Stock değeri 0 veya pozitif olmalıdır.'
-        });
+    // Validasyon ve tip dönüşümü
+    let stockValue: number | undefined;
+    if (stock !== undefined) {
+        stockValue = typeof stock === 'number' ? stock : parseInt(String(stock));
+        if (isNaN(stockValue) || stockValue < 0) {
+            return res.status(400).json({
+                message: 'Stock değeri 0 veya pozitif bir sayı olmalıdır.'
+            });
+        }
     }
 
     let startDate: Date | undefined;
@@ -172,7 +176,7 @@ export const updateDrop = async (
             const updateData: any = {};
             if (title !== undefined) updateData.title = title;
             if (description !== undefined) updateData.description = description;
-            if (stock !== undefined) updateData.stock = stock;
+            if (stockValue !== undefined) updateData.stock = stockValue;
             if (startDate) updateData.claimWindowStart = startDate;
             if (endDate) updateData.claimWindowEnd = endDate;
 
@@ -180,7 +184,7 @@ export const updateDrop = async (
             const hasChanges = 
                 (title !== undefined && title !== existingDrop.title) ||
                 (description !== undefined && description !== existingDrop.description) ||
-                (stock !== undefined && stock !== existingDrop.stock) ||
+                (stockValue !== undefined && stockValue !== existingDrop.stock) ||
                 (startDate && startDate.getTime() !== existingDrop.claimWindowStart.getTime()) ||
                 (endDate && endDate.getTime() !== existingDrop.claimWindowEnd.getTime());
 
