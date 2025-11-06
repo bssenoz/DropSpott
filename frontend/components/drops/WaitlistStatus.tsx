@@ -9,7 +9,7 @@ export default function WaitlistStatus({ position, stock }: IWaitlistStatusProps
   const isEligible = position <= stock;
 
   return (
-    <div className={`rounded-lg p-6 border ${
+    <div className={`rounded-lg p-6 border shadow-sm ${
       isEligible
         ? 'bg-green-50 border-green-200'
         : 'bg-yellow-50 border-yellow-200'

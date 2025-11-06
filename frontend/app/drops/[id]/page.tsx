@@ -139,8 +139,12 @@ export default function DropDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white border rounded-lg shadow-sm p-8 text-center">
+      <div>
+        <div className="mb-6">
+          <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Yükleniyor...</p>
         </div>
       </div>
@@ -149,9 +153,17 @@ export default function DropDetailPage() {
 
   if (error || !currentDrop) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div>
+        <div className="mb-6">
+          <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error || 'Drop bulunamadı.'}</p>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-800 text-sm">{error || 'Drop bulunamadı.'}</p>
+          </div>
         </div>
       </div>
     );
@@ -160,7 +172,7 @@ export default function DropDetailPage() {
   const status = getDropStatus();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div>
       <Toast
         message={toast.message}
         type={toast.type}
@@ -181,58 +193,75 @@ export default function DropDetailPage() {
         </Link>
       </div>
 
-      {/* Main Content */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header Section */}
+      <div className="mb-8">
         <DropHeader
           title={currentDrop.title}
           description={currentDrop.description}
           status={status}
         />
+      </div>
 
-        <div className="p-6 space-y-6">
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left Column - Main Info (8 columns) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Status Countdown - Full Width */}
           <StatusCountdown
             status={status}
             claimWindowStart={currentDrop.claimWindowStart}
             claimWindowEnd={currentDrop.claimWindowEnd}
           />
 
-          <DropStats
-            stock={currentDrop.stock}
-            waitlistCount={currentDrop._count.waitlistEntries}
-          />
+          {/* Progress and Stats Row */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Progress Bar */}
+            <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+              <ProgressBar
+                current={currentDrop._count.waitlistEntries}
+                total={currentDrop.stock}
+                label="Waitlist Doluluk Oranı"
+                showNumbers={true}
+              />
+            </div>
 
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <ProgressBar
-              current={currentDrop._count.waitlistEntries}
-              total={currentDrop.stock}
-              label="Waitlist Doluluk Oranı"
-              showNumbers={true}
+            {/* Stats */}
+            <DropStats
+              stock={currentDrop.stock}
+              waitlistCount={currentDrop._count.waitlistEntries}
             />
           </div>
 
+          {/* Claim Window Info */}
           <ClaimWindowInfo
             claimWindowStart={currentDrop.claimWindowStart}
             claimWindowEnd={currentDrop.claimWindowEnd}
           />
 
-          {/* Waitlist durumu sadece admin olmayan kullanıcılar için gösterilir */}
+          {/* Waitlist Status */}
           {waitlistEntry && user?.role !== 'ADMIN' && (
             <WaitlistStatus
               position={waitlistEntry.position}
               stock={currentDrop.stock}
             />
           )}
+        </div>
 
-          <WaitlistActions
-            hasWaitlistEntry={!!waitlistEntry}
-            isClaimWindowOpen={isClaimWindowOpen()}
-            dropId={dropId}
-            isJoining={isJoining}
-            isLeaving={isLeaving}
-            onJoin={handleJoinWaitlist}
-            onLeave={handleLeaveWaitlist}
-            isAdmin={user?.role === 'ADMIN'}
-          />
+        {/* Right Column - Actions (4 columns) */}
+        <div className="lg:col-span-4">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm sticky top-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Aksiyonlar</h3>
+            <WaitlistActions
+              hasWaitlistEntry={!!waitlistEntry}
+              isClaimWindowOpen={isClaimWindowOpen()}
+              dropId={dropId}
+              isJoining={isJoining}
+              isLeaving={isLeaving}
+              onJoin={handleJoinWaitlist}
+              onLeave={handleLeaveWaitlist}
+              isAdmin={user?.role === 'ADMIN'}
+            />
+          </div>
         </div>
       </div>
     </div>

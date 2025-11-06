@@ -7,13 +7,15 @@ interface ICountdownTimerProps {
   onComplete?: () => void;
   label?: string;
   className?: string;
+  variant?: 'default' | 'active';
 }
 
 export default function CountdownTimer({ 
   targetDate, 
   onComplete, 
   label = 'Kalan Süre',
-  className = '' 
+  className = '',
+  variant = 'default'
 }: ICountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -82,19 +84,25 @@ export default function CountdownTimer({
     { value: timeLeft.seconds, label: 'Saniye' },
   ];
 
+  const isActive = variant === 'active';
+  const bgColor = isActive ? 'from-green-50 to-green-100' : 'from-blue-50 to-blue-100';
+  const borderColor = isActive ? 'border-green-200' : 'border-blue-200';
+  const textColor = isActive ? 'text-green-900' : 'text-blue-900';
+  const labelColor = isActive ? 'text-green-700' : 'text-blue-700';
+
   return (
     <div className={className}>
-      <p className="text-sm text-gray-600 font-medium mb-3 text-center">{label}</p>
+      <p className={`text-sm font-medium mb-3 text-center ${isActive ? 'text-green-700' : 'text-gray-600'}`}>{label}</p>
       <div className="grid grid-cols-4 gap-2">
         {timeUnits.map((unit, index) => (
           <div
             key={index}
-            className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 text-center border border-blue-200"
+            className={`bg-gradient-to-br ${bgColor} rounded-lg p-3 text-center border ${borderColor}`}
           >
-            <div className="text-2xl font-bold text-blue-900">
+            <div className={`text-2xl font-bold ${textColor}`}>
               {unit.value.toString().padStart(2, '0')}
             </div>
-            <div className="text-xs text-blue-700 mt-1 font-medium">{unit.label}</div>
+            <div className={`text-xs ${labelColor} mt-1 font-medium`}>{unit.label}</div>
           </div>
         ))}
       </div>

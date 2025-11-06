@@ -15,12 +15,14 @@ export default function StatusCountdown({ status, claimWindowStart, claimWindowE
       borderColor: 'border-blue-200',
       targetDate: claimWindowStart,
       label: 'Claim Window Başlıyor',
+      variant: 'default' as const,
     },
     active: {
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       targetDate: claimWindowEnd,
       label: 'Claim Window Kapanıyor',
+      variant: 'active' as const,
     },
   };
 
@@ -28,8 +30,12 @@ export default function StatusCountdown({ status, claimWindowStart, claimWindowE
   if (!currentConfig) return null;
 
   return (
-    <div className={`${currentConfig.bgColor} rounded-lg p-6 border ${currentConfig.borderColor}`}>
-      <CountdownTimer targetDate={currentConfig.targetDate} label={currentConfig.label} />
+    <div className={`${currentConfig.bgColor} rounded-lg p-6 border ${currentConfig.borderColor} shadow-sm`}>
+      <CountdownTimer 
+        targetDate={currentConfig.targetDate} 
+        label={currentConfig.label}
+        variant={currentConfig.variant}
+      />
     </div>
   );
 }

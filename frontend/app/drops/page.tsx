@@ -137,18 +137,30 @@ export default function DropsPage() {
 
                 {/* Description */}
                 {drop.description && (
-                  <p className="text-gray-600 text-sm mb-5 line-clamp-2 flex-1">
-                    {drop.description}
-                  </p>
+                  <div className="mb-3 w-full h-5 overflow-hidden">
+                    <p className="text-gray-600 text-sm overflow-hidden text-ellipsis whitespace-nowrap block">
+                      {drop.description}
+                    </p>
+                  </div>
                 )}
 
                 {/* Countdown Timer */}
                 {status === 'upcoming' && (
-                  <div className="mb-5">
+                  <div className="mb-5 w-full">
                     <CountdownTimer
                       targetDate={drop.claimWindowStart}
                       label="Claim Window Başlıyor"
-                      className="text-sm"
+                      className="text-sm w-full"
+                    />
+                  </div>
+                )}
+                {status === 'active' && (
+                  <div className="mb-5 w-full bg-green-50 rounded-lg p-4 border border-green-200">
+                    <CountdownTimer
+                      targetDate={drop.claimWindowEnd}
+                      label="Claim Window Kapanıyor"
+                      className="text-sm w-full"
+                      variant="active"
                     />
                   </div>
                 )}
