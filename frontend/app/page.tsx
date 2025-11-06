@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,6 +16,15 @@ export default function HomePage() {
 
   // Hydration hatasını önlemek için client-side mounting'i bekle
   const showAuthenticated = mounted && isAuthenticated;
+
+  const handleViewDrops = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+    } else {
+      router.push('/drops');
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -149,12 +160,12 @@ export default function HomePage() {
           }
         </p>
         <div className="flex gap-4 justify-center">
-          <Link
-            href="/drops"
+          <button
+            onClick={handleViewDrops}
             className="px-6 py-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-semibold rounded-lg hover:from-gray-800 hover:to-gray-700 transition-all shadow-sm hover:shadow-md"
           >
             Drop'ları Görüntüle
-          </Link>
+          </button>
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ export default function ConditionalLayout({
 
   const handleLogout = () => {
     logout();
-    router.push('/auth/login');
+    router.push('/');
   };
 
   if (isAuthPage) {
