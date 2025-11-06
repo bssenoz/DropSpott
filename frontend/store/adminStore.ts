@@ -33,6 +33,7 @@ interface AdminActions {
     createDrop: (token: string, formData: DropFormData) => Promise<Drop | null>;
     updateDrop: (token: string, id: string, formData: Partial<DropFormData>) => Promise<Drop | null>;
     deleteDrop: (token: string, id: string) => Promise<boolean>;
+    suggestDescription: (token: string, title: string, description?: string, model?: string, input?: string) => Promise<string | null>;
     setFormData: (formData: DropFormData) => void;
     updateFormField: <K extends keyof DropFormData>(field: K, value: DropFormData[K]) => void;
     resetForm: () => void;
@@ -93,6 +94,19 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
             return true;
         } catch (err) {
             return false;
+        }
+    },
+
+    suggestDescription: async (token: string, title: string, description?: string, model?: string, input?: string): Promise<string | null> => {
+        try {
+            const response = await axios.post(
+                `${API_URL}/ai/suggest-description`,
+                { title, description, model, input },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            return response.data.description || null;
+        } catch (err) {
+            return null;
         }
     },
 
@@ -159,6 +173,7 @@ export const useAdminActions = () => {
     const createDrop = useAdminStore((state) => state.createDrop);
     const updateDrop = useAdminStore((state) => state.updateDrop);
     const deleteDrop = useAdminStore((state) => state.deleteDrop);
+    const suggestDescription = useAdminStore((state) => state.suggestDescription);
     const setFormData = useAdminStore((state) => state.setFormData);
     const updateFormField = useAdminStore((state) => state.updateFormField);
     const resetForm = useAdminStore((state) => state.resetForm);
@@ -171,6 +186,7 @@ export const useAdminActions = () => {
         createDrop,
         updateDrop,
         deleteDrop,
+        suggestDescription,
         setFormData,
         updateFormField,
         resetForm,
