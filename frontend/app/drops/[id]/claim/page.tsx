@@ -6,8 +6,13 @@ import Link from 'next/link';
 import { useDropsState, useDropsActions, useDropsStore } from '@/store/dropsStore';
 import { useAuth } from '@/store/authStore';
 import { Toast } from '@/components/Toast';
-import StatusBadge from '@/components/StatusBadge';
 import CountdownTimer from '@/components/CountdownTimer';
+import ClaimHeader from '@/components/claims/ClaimHeader';
+import ClaimWindowClosed from '@/components/claims/ClaimWindowClosed';
+import NotInWaitlist from '@/components/claims/NotInWaitlist';
+import ClaimCodeDisplay from '@/components/claims/ClaimCodeDisplay';
+import PositionOutOfStock from '@/components/claims/PositionOutOfStock';
+import ClaimCodeForm from '@/components/claims/ClaimCodeForm';
 
 export default function ClaimPage() {
   const params = useParams();
@@ -37,10 +42,7 @@ export default function ClaimPage() {
       if (token) {
         await checkWaitlistStatus(token, dropId);
         
-        // Check for existing claim code if claim window is open
-        // This way users can see their existing code when they revisit the page
-        // The backend claim endpoint is idempotent - if code exists, it returns it
-        // If it doesn't exist but user is eligible, it creates one (okay when claim window is open)
+        // Claim penceresi açıksa mevcut claim code'u kontrol et
         const drop = useDropsStore.getState().currentDrop;
         const waitlistEntry = useDropsStore.getState().waitlistEntry;
         
@@ -49,34 +51,19 @@ export default function ClaimPage() {
           const claimStart = new Date(drop.claimWindowStart);
           const claimEnd = new Date(drop.claimWindowEnd);
           
-          // Only check if claim window is open and user position is within stock
+          // Claim penceresi açık ve pozisyon stok içindeyse claim code'u getir
           if (now >= claimStart && now <= claimEnd && waitlistEntry.position <= drop.stock) {
-            // Try to get existing claim code (or create if eligible)
-            // This is safe because claim window is open, so user can claim anyway
             const success = await claimDrop(token, dropId);
-            // If successful, claimCode will be set in store
-            // If not successful, clear error since this is just a check
             if (!success) {
               useDropsStore.getState().clearError();
             }
-          }
+         }
         }
       }
     };
 
     loadData();
   }, [dropId, fetchDrop, isAuthenticated, token, checkWaitlistStatus, claimDrop, router]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const isClaimWindowOpen = () => {
     if (!currentDrop) return false;
@@ -96,7 +83,7 @@ export default function ClaimPage() {
     const success = await claimDrop(token, dropId);
     setIsClaiming(false);
 
-    // Check if claim code was set after claim attempt
+    // Claim işlemi sonucunu kontrol et
     const updatedClaimCode = useDropsStore.getState().claimCode;
     const errorMessage = useDropsStore.getState().error;
 
@@ -146,16 +133,6 @@ export default function ClaimPage() {
 
   const claimWindowOpen = isClaimWindowOpen();
 
-  const getDropStatus = (): 'upcoming' | 'active' | 'ended' => {
-    if (!currentDrop) return 'ended';
-    const now = new Date();
-    const claimStart = new Date(currentDrop.claimWindowStart);
-    const claimEnd = new Date(currentDrop.claimWindowEnd);
-    if (now < claimStart) return 'upcoming';
-    if (now >= claimStart && now <= claimEnd) return 'active';
-    return 'ended';
-  };
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <Toast
@@ -165,7 +142,7 @@ export default function ClaimPage() {
         onClose={() => setToast({ ...toast, isVisible: false })}
       />
 
-      {/* Back Button */}
+      {/* Geri butonu */}
       <div className="mb-6">
         <Link
           href={`/drops/${dropId}`}
@@ -178,25 +155,11 @@ export default function ClaimPage() {
         </Link>
       </div>
 
-      {/* Main Content */}
+      {/* Ana içerik */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        {/* Header Section */}
-        <div className="bg-green-600 px-6 py-8 border-b border-green-700">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{currentDrop.title}</h1>
-              <p className="text-green-50 text-sm mt-1">Claim Code</p>
-            </div>
-          </div>
-        </div>
+        <ClaimHeader title={currentDrop.title} />
 
         <div className="p-6 space-y-6">
-          {/* Countdown Timer */}
           {claimWindowOpen && (
             <div className="bg-green-50 rounded-lg p-6 border border-green-200">
               <CountdownTimer
@@ -206,186 +169,40 @@ export default function ClaimPage() {
             </div>
           )}
 
-          {/* Status Messages */}
           {!claimWindowOpen && (
-            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">Claim Penceresi Kapalı</h3>
-                  <p className="text-yellow-800 mb-4 text-sm">
-                    Claim penceresi henüz açılmadı veya kapandı.
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded p-3 border border-yellow-200">
-                      <span className="text-yellow-700 text-xs font-medium block mb-1">Başlangıç</span>
-                      <p className="text-yellow-900 font-semibold">{formatDate(currentDrop.claimWindowStart)}</p>
-                    </div>
-                    <div className="bg-white rounded p-3 border border-yellow-200">
-                      <span className="text-yellow-700 text-xs font-medium block mb-1">Bitiş</span>
-                      <p className="text-yellow-900 font-semibold">{formatDate(currentDrop.claimWindowEnd)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ClaimWindowClosed
+              claimWindowStart={currentDrop.claimWindowStart}
+              claimWindowEnd={currentDrop.claimWindowEnd}
+            />
           )}
 
-          {!waitlistEntry && (
-            <div className="bg-red-50 rounded-lg p-6 border border-red-200">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">Waitlist'te Değilsiniz</h3>
-                  <p className="text-red-800 mb-4 text-sm">
-                    Bu drop için waitlist'te değilsiniz. Önce waitlist'e katılmanız gerekiyor.
-                  </p>
-                  <Link
-                    href={`/drops/${dropId}`}
-                    className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
-                  >
-                    Drop Sayfasına Dön
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
+          {!waitlistEntry && <NotInWaitlist dropId={dropId} />}
 
-          {/* Claim Code Display */}
           {claimCode ? (
-            <div className="space-y-6">
-              <div className="bg-green-50 rounded-lg p-8 border-2 border-green-300">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-2xl font-bold text-green-900 mb-2">Claim Code'unuz Hazır!</h2>
-                  <p className="text-green-700 text-sm">Bu kodu güvenli bir yerde saklayın</p>
-                </div>
-                
-                {/* Code Display */}
-                <div className="bg-white border-2 border-green-300 rounded-lg p-6 mb-6">
-                  <p className="text-2xl sm:text-3xl font-mono font-bold text-center text-green-900 tracking-wider break-all">
-                    {claimCode.code}
-                  </p>
-                </div>
-
-                {/* Copy Button */}
-                <button
-                  onClick={() => copyToClipboard(claimCode.code)}
-                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Kodu Kopyala
-                </button>
-
-                {/* Info */}
-                <div className="mt-6 pt-6 border-t border-green-300">
-                  <div className="flex items-center justify-center gap-2 text-green-700 text-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Oluşturulma: {formatDate(claimCode.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {claimCode.used && (
-                <div className="bg-gray-50 rounded-lg p-6 border border-gray-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-gray-900 font-semibold">Bu claim code kullanılmış</p>
-                      {claimCode.usedAt && (
-                        <p className="text-gray-600 text-sm mt-1">
-                          Kullanım tarihi: {formatDate(claimCode.usedAt)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ClaimCodeDisplay
+              code={claimCode.code}
+              createdAt={claimCode.createdAt}
+              used={claimCode.used}
+              usedAt={claimCode.usedAt}
+              onCopy={copyToClipboard}
+            />
           ) : (
             waitlistEntry && claimWindowOpen && (
               <div className="space-y-6">
                 {waitlistEntry.position > currentDrop.stock && (
-                  <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-yellow-900 mb-2">Pozisyonunuz Stok Dışında</h3>
-                        <p className="text-yellow-800 text-sm">
-                          Pozisyonunuz <span className="font-semibold">#{waitlistEntry.position}</span> mevcut stoktan (<span className="font-semibold">{currentDrop.stock}</span>) daha yüksek.
-                          Stok artarsa hak kazanabilirsiniz.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <PositionOutOfStock
+                    position={waitlistEntry.position}
+                    stock={currentDrop.stock}
+                  />
                 )}
 
                 {waitlistEntry.position <= currentDrop.stock && (
-                  <div className="bg-blue-50 rounded-lg p-8 border border-blue-200">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <h2 className="text-xl font-bold text-blue-900 mb-2">
-                        Claim Code Almaya Hazır mısınız?
-                      </h2>
-                      <p className="text-blue-700 text-sm">
-                        Waitlist pozisyonunuz <span className="font-bold text-blue-900">#{waitlistEntry.position}</span> stok içinde.
-                        Claim code'unuzu oluşturabilirsiniz.
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleClaim}
-                      disabled={isClaiming}
-                      className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
-                    >
-                      {isClaiming ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Claim Code Oluşturuluyor...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Claim Code Oluştur
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <ClaimCodeForm
+                    position={waitlistEntry.position}
+                    stock={currentDrop.stock}
+                    isClaiming={isClaiming}
+                    onClaim={handleClaim}
+                  />
                 )}
               </div>
             )
@@ -395,4 +212,3 @@ export default function ClaimPage() {
     </div>
   );
 }
-  
