@@ -1,0 +1,69 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  waitlistEntries WaitlistEntry[]
+  claimCodes    ClaimCode[]
+}
+
+model Drop {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  stock           Int      @default(0)
+  claimWindowStart DateTime
+  claimWindowEnd   DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  waitlistEntries WaitlistEntry[]
+  claimCodes      ClaimCode[]
+}
+
+model WaitlistEntry {
+  id            String   @id @default(uuid())
+  userId        String
+  dropId        String
+  position      Int
+  priorityScore Int
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drop          Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dropId])
+  @@index([dropId, position])
+  @@index([dropId, priorityScore])
+}
+
+model ClaimCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  userId    String
+  dropId    String
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drop      Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dropId]) // Bir kullanıcı bir drop için sadece bir claim code alabilir
+  @@index([dropId])
+  @@index([userId])
+  @@index([code])
+}
