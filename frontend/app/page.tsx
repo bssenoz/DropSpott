@@ -7,13 +7,33 @@ import { useAuthStore } from '@/store/authStore';
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // User bilgisinin yüklendiğinden emin olmak için kısa bir gecikme
+    const timer = setTimeout(() => {
+      setAuthInitialized(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Hydration hatasını önlemek için client-side mounting'i bekle
-  const showAuthenticated = mounted && isAuthenticated;
+  // Hydration ve auth initialization hatasını önlemek için bekle
+  if (!mounted || !authInitialized) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // User bilgisinden sonra içeriği göster
+  const showAuthenticated = isAuthenticated && user;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
