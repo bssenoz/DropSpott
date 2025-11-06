@@ -99,8 +99,21 @@ export function DropFormFields({ formData, updateFormField, disableStock = false
                     type="number"
                     required
                     min="0"
-                    value={formData.stock}
-                    onChange={(e) => updateFormField('stock', parseInt(e.target.value) || 0)}
+                    value={formData.stock === 0 ? '' : formData.stock}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        // Boş string ise 0 olarak ayarla
+                        if (value === '') {
+                            updateFormField('stock', 0);
+                        } else {
+                            // Sayısal değeri parse et
+                            const numValue = parseInt(value, 10);
+                            // Geçerli bir sayı ise güncelle
+                            if (!isNaN(numValue) && numValue >= 0) {
+                                updateFormField('stock', numValue);
+                            }
+                        }
+                    }}
                     disabled={disableStock}
                     className={`w-full px-4 py-2.5 pr-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                         disableStock
